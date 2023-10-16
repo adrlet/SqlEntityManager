@@ -1,6 +1,7 @@
 <?php
 
-require_once $_SERVER['DOCUMENT_ROOT'].'/QueryManager/AdvancedQueryManager.php';
+require_once $_SERVER['DOCUMENT_ROOT'].'/QueryManager/QueryManager/AdvancedQueryManager.php';
+require_once $_SERVER['DOCUMENT_ROOT'].'/QueryManager/QueryManager/SqlTranslator.php';
 
 /*
  * Class:  MySqlQueryManager 
@@ -27,6 +28,8 @@ require_once $_SERVER['DOCUMENT_ROOT'].'/QueryManager/AdvancedQueryManager.php';
  */
 class MySqlQueryManager extends AdvancedQueryManager
 {
+	use SqlTranslator;
+
 	/*
 	* Method: describe 
 	* --------------------
@@ -39,7 +42,7 @@ class MySqlQueryManager extends AdvancedQueryManager
 	public function describe() : array
 	{
 		$pdoConnection = $this->database->getConnection();
-		return $pdoConnection->query('describe '.$this->tableName)->fetchAll();
+		return $pdoConnection->query('DESCRIBE '.$this->tableName)->fetchAll();
 	}
 	
 	/*
@@ -139,8 +142,7 @@ class MySqlQueryManager extends AdvancedQueryManager
 	*/
 	protected function queryWhere() : string
 	{
-		echo 'ok123';
-		return 'where '.$this->processBoolean($this->whereArray);
+		return 'WHERE '.processBoolean($this->whereArray);
 	}
 	
 	/*
@@ -152,8 +154,8 @@ class MySqlQueryManager extends AdvancedQueryManager
 	*/
 	protected function queryOrder() : string
 	{
-		return 'order by '.implode(', ', $this->orderArray).' '.
-		($this->orderDesc ? 'desc ' : 'asc').' ';
+		return 'ORDER BY '.implode(', ', $this->orderArray).' '.
+		($this->orderDesc ? 'DESC ' : 'ASC').' ';
 	}
 	
 	/*
@@ -165,7 +167,7 @@ class MySqlQueryManager extends AdvancedQueryManager
 	*/
 	protected function queryGroup() : string
 	{
-		return 'group by '.$this->groupAttribute.' ';
+		return 'GROUP BY '.$this->groupAttribute.' ';
 	}
 	
 	/*
@@ -177,7 +179,7 @@ class MySqlQueryManager extends AdvancedQueryManager
 	*/
 	protected function queryHaving() : string
 	{
-		return 'having '.$this->processBoolean($this->havingArray);
+		return 'HAVING '.processBoolean($this->havingArray);
 	}
 	
 	/*
@@ -189,7 +191,7 @@ class MySqlQueryManager extends AdvancedQueryManager
 	*/
 	protected function queryLimit() : string
 	{
-		return 'limit '.$this->limitUp.
+		return 'LIMIT '.$this->limitUp.
 		($this->limitDown == null ? ' ' : ', '.$this->limitDown.' ');
 	}
 
@@ -208,9 +210,9 @@ class MySqlQueryManager extends AdvancedQueryManager
 		// First walks by join type then by specific joins in those types
 		foreach($this->joinArray as $joinType => $queryArray)
 			foreach($queryArray as $query)
-				$stringQuery .= ($joinType == 'cross' ?
-				'cross join '.$query.PHP_EOL :
-				$joinType.' join '.$query[0].' ON '.$query[1].' '.$query[2].' '.$query[3].PHP_EOL
+				$stringQuery .= ($joinType == 'CROSS' ?
+				'CROSS JOIN '.$query.PHP_EOL :
+				$joinType.' JOIN '.$query[0].' ON '.$query[1].' '.$query[2].' '.$query[3].PHP_EOL
 				).PHP_EOL;
 		
 		

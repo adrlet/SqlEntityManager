@@ -13,7 +13,6 @@
     *   Internal:
     *       protected initJoin() : void
     *       protected addJoin(string $type, array|string $join) : void
-    *       protected joinToString() : string
     *
 	*	Interface:
 	*  		public join(string $table, string $columnFirst, string $comparator, string $columnSecond) : QueryManager
@@ -61,26 +60,6 @@ trait Join
 			$this->initJoin();
 
 		$this->joinArray[$type][] = $join;
-	}
-
-    /*
-	* Method: joinToString 
-	* --------------------
-	*  Creates sql code for every type and every table of join within join table	
-	*
-	*  returns: String
-	*/
-	protected function joinToString() : string
-	{
-		if(empty($this->joinArray) == false)
-		{
-			if($this->method != 'select')
-				throw new Exception(get_class($this).':'.__FUNCTION__.':left clausule is only supported for select');
-
-			return $this->queryJoin();
-		}
-
-		return '';
 	}
 
 	/*

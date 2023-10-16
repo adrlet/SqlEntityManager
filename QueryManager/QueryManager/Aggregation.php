@@ -33,7 +33,6 @@
 *       public variance(string $attribute) : queryManager
 *       public varSamp(string $attribute) : queryManager
 *
-* 
 */
 trait Aggregation
 {
@@ -58,41 +57,6 @@ trait Aggregation
 			$this->grouped[$aggregation] = [];
 		
 		$this->grouped[$aggregation][] = $attribute;
-	}
-
-    /*
-	* Method: aggregationToString 
-	* --------------------
-	*  Convert array of aggregation methods with attributes to one string
-	*  Adds table name prefix to attributes from base table
-	*  Attributes from subqueries should have prefix provided within aggregation method
-	*
-	*  returns: string
-	*/
-	//protected function aggregationToString()
-	public function aggregationToString() : string
-	{
-		$prefix = $this->tableName.'.';
-		$aggrString = '';
-
-        // Check each method
-		foreach($this->grouped as $method => $aggrArr)
-		{
-            // Add prefix to attribute and wrap it within method
-			$prefixed = array_map(function($attribute) use($prefix, $method)
-			{
-                // This strpos is used assuming that attributes from other than base table
-                // has been provided with table prefixes, otherwise it will mostly fail
-				return $method.'('.
-				(strpos($attribute, '.') === false ? $prefix.$attribute : $attribute).
-				')';
-			}, $aggrArr);
-
-            // Concatenate string
-			$aggrString .= implode(', ', $prefixed);
-		}
-
-		return $aggrString;
 	}
 
 	/*

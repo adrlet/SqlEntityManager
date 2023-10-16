@@ -1,10 +1,15 @@
 <?php
 
-require_once $_SERVER['DOCUMENT_ROOT'].'/QueryManager/QueryRaw.php';
-require_once $_SERVER['DOCUMENT_ROOT'].'/QueryManager/Aggregation.php';
-require_once $_SERVER['DOCUMENT_ROOT'].'/QueryManager/SqlBuilder.php';
-require_once $_SERVER['DOCUMENT_ROOT'].'/Database/Database.php';
 require_once $_SERVER['DOCUMENT_ROOT'].'/Convertors/Stringizable.php';
+require_once $_SERVER['DOCUMENT_ROOT'].'/Database/Database.php';
+require_once $_SERVER['DOCUMENT_ROOT'].'/QueryManager/QueryManager/Aggregation.php';
+require_once $_SERVER['DOCUMENT_ROOT'].'/QueryManager/QueryManager/BooleanTools.php';
+require_once $_SERVER['DOCUMENT_ROOT'].'/QueryManager/QueryManager/Having.php';
+require_once $_SERVER['DOCUMENT_ROOT'].'/QueryManager/QueryManager/Join.php';
+require_once $_SERVER['DOCUMENT_ROOT'].'/QueryManager/QueryManager/QueryRaw.php';
+require_once $_SERVER['DOCUMENT_ROOT'].'/QueryManager/QueryManager/SqlBuilder.php';
+require_once $_SERVER['DOCUMENT_ROOT'].'/QueryManager/QueryManager/SqlMethods.php';
+require_once $_SERVER['DOCUMENT_ROOT'].'/QueryManager/QueryManager/Where.php';
 
 /*
  * Class:  QueryManager 
@@ -32,21 +37,7 @@ require_once $_SERVER['DOCUMENT_ROOT'].'/Convertors/Stringizable.php';
  *		$joinArray : Array
  * 
  *  Methods:
- *  	__construct(string $tableName, Database $database = null)
- *  	public describe();
- * 		public clear() : void
- * 		public order(array $attributes, bool $desc = false) : QueryManager
- * 		public group(string $attribute) : QueryManager
- * 		public limit(int $upLimit, int $downLimit = null) : QueryManager
- * 		public methodToString() : string
- * 		public whereToString() : string
- * 		public groupToString() : string
- * 		public orderToString() : string
- * 		public limitToString() : string
- * 		public joinToString() : string
- * 		public toString() : string
- * 		public exec() : array
- * 		protected gueryMethod() : string
+ * 	 Internal:
  * 		protected unnamedBind($binds)
  * 		protected namedBind($binds)
  * 		protected preparedExec($query) : array
@@ -60,12 +51,30 @@ require_once $_SERVER['DOCUMENT_ROOT'].'/Convertors/Stringizable.php';
  * 		abstract protected queryHaving() : string;
  * 		abstract protected queryLimit() : string;
  * 		abstract protected queryJoin();
+ *  	__construct(string $tableName, Database $database = null)
+ * 		protected gueryMethod() : string
+ *      protected joinToString() : string
+ * 
+ *   Interface:
+ *  	public describe();
+ * 		public clear() : void
+ * 		public order(array $attributes, bool $desc = false) : QueryManager
+ * 		public group(string $attribute) : QueryManager
+ * 		public limit(int $upLimit, int $downLimit = null) : QueryManager
+ * 		public methodToString() : string
+ * 		public whereToString() : string
+ * 		public groupToString() : string
+ * 		public orderToString() : string
+ * 		public limitToString() : string
+ * 		public joinToString() : string
+ * 		public toString() : string
+ * 		public exec() : array
  * 		
  */
 
 abstract class QueryManager implements SqlBuilder, Stringizable
 {
-	use QueryRaw, Aggregation, SqlMethods, Join, Where, Having;
+	use SqlMethods, QueryRaw, Where, Aggregation, Having, Join;
 	
 	// Active database connection wraper for PDO
 	protected $database = null;
@@ -398,7 +407,7 @@ abstract class QueryManager implements SqlBuilder, Stringizable
 		$fetchedData = [];
 		switch($this->method)
 		{
-		case 'insert':
+		case 'INSERT':
 			$attributesData = [];
 
 			// Non empty attribute array means only some sort of columns are specified
@@ -431,7 +440,7 @@ abstract class QueryManager implements SqlBuilder, Stringizable
 
 			break;
 
-		case 'update':
+		case 'UPDATE':
 			$attributesData = [];
 
 			// Update needs named bindings
@@ -451,14 +460,14 @@ abstract class QueryManager implements SqlBuilder, Stringizable
 			
 			break;
 			
-		case 'select':
+		case 'SELECT':
 			// Executes query and returns result
 			$stmt->execute();
 			$fetchedData = $stmt->fetchAll(PDO::FETCH_ASSOC);
 			
 			break;
 			
-		case 'delete':
+		case 'DELETE':
 			// Simply executes delete query
 			$stmt->execute();
 			break;
@@ -467,10 +476,64 @@ abstract class QueryManager implements SqlBuilder, Stringizable
 		return $fetchedData;
 	}
 
+	/*
+	* Method: gueryMethod 
+	* --------------------
+	* Returns query for selected method
+	*
+	*  returns: String
+	*/
+	protected function gueryMethod() : string
+	{
+		switch($this->method)
+		{
+		case 'SELECT':
+			return $this->querySelect();
+			break;
+			
+		case 'INSERT':
+			return $this->queryInsert();
+			break;
+			
+		case 'UPDATE':
+			return $this->queryUpdate();
+			break;
+			
+		case 'DELETE':
+			return $this->queryDelete();
+			break;
+		
+		default:
+			throw new Exception(get_class($this).':'.__FUNCTION__.':not supported sql query method');
+		}
+	}
+
 	abstract protected function querySelect() : string;
 	abstract protected function queryInsert() : string;
 	abstract protected function queryUpdate() : string;
 	abstract protected function queryDelete() : string;
+
+	/*
+	* Method: joinToString 
+	* --------------------
+	*  Creates sql code for every type and every table of join within join table	
+	*
+	*  returns: String
+	*/
+	protected function joinToString() : string
+	{
+		if(empty($this->joinArray) == false)
+		{
+			if($this->method != 'select')
+				throw new Exception(get_class($this).':'.__FUNCTION__.':left clausule is only supported for select');
+
+			return $this->queryJoin();
+		}
+
+		return '';
+	}
+
+	abstract protected function queryJoin();
 	
 	abstract protected function queryWhere() : string;
 	abstract protected function queryOrder() : string;
@@ -479,8 +542,6 @@ abstract class QueryManager implements SqlBuilder, Stringizable
 	abstract protected function queryHaving() : string;
 	
 	abstract protected function queryLimit() : string;
-
-	abstract protected function queryJoin();
 }
 
 ?>

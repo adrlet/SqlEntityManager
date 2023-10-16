@@ -2,6 +2,26 @@
 
 require_once './DateTools.php';
 
+	/*
+	* Trait:  TimeStamp 
+	* --------------------
+	*  Supports timestamping of creation and modification of object
+	*  When modification are made from object scope
+	*  
+	*  Attributes:
+	*		$TimeStampDateFormat : String
+	*  		$deletedAt : String
+	*		$deletedAtValue : String
+	* 
+	*  Methods:
+	*   Internal:
+	*		protected static excludeThrash($queryManager) : MySqlEntityManager
+	*	
+	*	Interface:
+	*		public thrash() : void
+	*		public function retrieve() : void
+	* 
+	*/
 trait TimeStamp
 {
 	protected static $TimeStampDateFormat = 'Y-m-d H:i:s';

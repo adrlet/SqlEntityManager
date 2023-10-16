@@ -30,38 +30,6 @@ trait SqlMethods
 	// Values for records if update or insert is performed
 	protected $values = [];
 
-	/*
-	* Method: gueryMethod 
-	* --------------------
-	* Returns query for selected method
-	*
-	*  returns: String
-	*/
-	protected function gueryMethod() : string
-	{
-		switch($this->method)
-		{
-		case 'SELECT':
-			return $this->querySelect();
-			break;
-			
-		case 'INSERT':
-			return $this->queryInsert();
-			break;
-			
-		case 'UPDATE':
-			return $this->queryUpdate();
-			break;
-			
-		case 'DELETE':
-			return $this->queryDelete();
-			break;
-		
-		default:
-			throw new Exception(get_class($this).':'.__FUNCTION__.':not supported sql query method');
-		}
-	}
-
     // wariant 1 atrybuty = []
 	// wariant 2 atrybuty = [...]
 	/*
